@@ -1,41 +1,59 @@
-import { getDiceRollArray, getDicePlaceholderHtml } from "./utils/utils.js";
+import {
+  getDiceRollArray,
+  getDicePlaceholderHtml,
+  getPercentage,
+} from "./utils/utils.js";
 
 function Character(data) {
   Object.assign(this, data);
 
-  this.diceArray = getDicePlaceholderHtml(this.diceCount);
+  this.maxHealth = this.health;
 
-  this.getDiceHtml = function () {
+  this.diceHtml = getDicePlaceholderHtml(this.diceCount);
+
+  this.setDiceHtml = () => {
     this.currentDiceScore = getDiceRollArray(this.diceCount);
-    this.diceArray = this.currentDiceScore
-      .map(function (num) {
-        return `<div class="dice">${num}</div>`;
-      })
+    this.diceHtml = this.currentDiceScore
+      .map((num) => `<div class="dice">${num}</div>`)
       .join("");
   };
 
-  this.getCharacterHtml = function () {
-    const { name, avatar, health, diceArray } = this;
+  this.getCharacterHtml = () => {
+    const { name, avatar, health, diceHtml } = this;
+    const healthBar = this.getHealthBarHtml();
 
     return `<div class="character-card">
       <h4 class="name"> ${name} </h4>
       <img class="avatar" src="${avatar}" />
       <div class="health">health: <b> ${health} </b></div>
+      ${healthBar}
       <div class="dice-container">
-          ${diceArray}
+          ${diceHtml}
       </div>
   </div>`;
   };
 
-  this.takeDamage = function (attackScoreArray) {
-    const totalAttackScore = attackScoreArray.reduce(function (
-      totalScore,
-      currentScore
-    ) {
-      return totalScore + currentScore;
-    });
+  this.takeDamage = (attackScoreArray) => {
+    const totalAttackScore = attackScoreArray.reduce(
+      (totalScore, currentScore) => totalScore + currentScore
+    );
 
     this.health -= totalAttackScore;
+
+    if (this.health <= 0) {
+      this.health = 0;
+      this.dead = true;
+    }
+  };
+
+  this.getHealthBarHtml = () => {
+    const percent = getPercentage(this.health, this.maxHealth);
+    return `
+    <div class="health-bar-outer">
+        <div class="health-bar-inner ${percent < 26 ? "danger" : ""} " 
+        style="width: ${percent}%;">
+        </div>
+    </div>`;
   };
 }
 
